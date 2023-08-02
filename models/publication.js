@@ -9,7 +9,7 @@ const publicationSchema = Schema({
         type: String,
         required: true
     },
-    file: String,
+    image: String,
     categories: String,
     created_at: {
         type: Date,

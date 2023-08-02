@@ -11,7 +11,7 @@ const notificationSchema = Schema({
     },
     categories:{
         type: Array,
-        default: ['Nueva publicación',' Nuevo comentario', 'Solicitud de amistad']
+        default: ['Nueva publicación',' Nuevo comentario', 'Solicitud de amistad','Recuperar contraseña']
     },
     created_at: {
         type: Date,

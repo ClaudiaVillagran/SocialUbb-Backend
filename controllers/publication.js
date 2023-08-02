@@ -25,7 +25,7 @@ const save = (req, res) => {
             return res.status(200).send({
                 status: "success",
                 message: 'Publicacion guardada',
-                publicationStored
+                publication: newPublication
             });
 
     });
@@ -116,7 +116,7 @@ const upload = (req, res) => {
     const extension = imageSplit[1];
     console.log(extension);
     // Comprobar extension
-    if (extension != "png" && extension != "jpg" && extension != "jpeg" && extension != "gif") {
+    if (extension != "png" || extension != "jpg" || extension != "jpeg" || extension != "gif") {
 
         // Borrar archivo subido
         const filePath = req.file.path;
@@ -130,11 +130,11 @@ const upload = (req, res) => {
     }
 
     // Si si es correcta, guardar imagen en bbdd
-    Publication.findOneAndUpdate({ "student": req.student.id, "_id": publicationId }, { file: req.file.filename }, { new: true }, (error, publicationUpdated) => {
+    Publication.findOneAndUpdate({ student: req.student.id, _id: publicationId }, { image: req.file.filename }, { new: true }, (error, publicationUpdated) => {
         if (error || !publicationUpdated) {
             return res.status(500).send({
                 status: "error",
-                message: "Error en la subida del avatar"
+                message: "Error en la subida del archivo"
             })
         }
 
@@ -143,6 +143,7 @@ const upload = (req, res) => {
             status: "success",
             publication: publicationUpdated,
             file: req.file,
+            image
         });
     });
 
