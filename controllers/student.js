@@ -19,14 +19,24 @@ const register = (req, res) => {
     const params = req.body
     
     //comprobar que llegan
-    if (!params.name || !params.email || !params.password) {
-        return res.status(200).json({
-            status: "error",
-            message: "faltan datos"
-        })
-    }
+    if (
+        params.name === undefined ||
+        params.email === undefined ||
+        params.password === undefined
+      ) {
+        return res.status(400).send({
+          status: "error",
+          message: "verifique que todos los campos esten completos",
+        });
+      }
 
-    
+    if (!params.email.endsWith("@alumnos.ubiobio.cl")) {
+        return res.status(400).send({
+          status: "error",
+          message: "Ingrese un dominio valido en el campo email",
+        });
+      }
+      console.log(params.email)
     //control de usuarios duplicados
         //con el $or decimos que se debe cumplir una condicion u otra
     Student.find({
@@ -72,7 +82,10 @@ const login = (req, res) => {
     const params = req.body;
 
     if (!params.email || !params.password) {
-        return res.status(500).send({message:"faltan datos"})
+        return res.status(500).send({
+            status: "error",
+            message:"faltan datos"
+        })
     }
     //buscar si existe en la bd
     Student.findOne({email: params.email})
