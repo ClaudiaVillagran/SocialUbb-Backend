@@ -35,7 +35,7 @@ Se debe generar un archivo .env en la carpeta frontend y backend respectivamente
 BACKEND:
 
 DB= mongodb+srv://SocialUbb:9RLszlBSkQoXKa50@socialubbcluster.n4rqyez.mongodb.net/SocialUbb?retryWrites=true&w=majority
-PORT=3000
+PORT=80
 
 FRONTEND:
 
@@ -43,7 +43,7 @@ cd SocialUbb-Frontend
 cd helpers
 nano Global.jsx
 
-url:"http://ipservidor:3000/api/"
+url:"http://ipservidor:1332/api/"
 
 Instalar dependencias del proyecto ambiente de desarrollo
 
@@ -129,6 +129,6 @@ Para ejecutar el proyecto se debe ejecutar el siguiente comando en la terminal:
 
 pm2 start yarn -- dev
 
-Para visualizar el frontend se debe dirigir a la siguiente ruta:
+para visualizar el backend
 
-http://ipservidor:3000
+http://ipservidor:1332cd ..
