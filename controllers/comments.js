@@ -32,10 +32,9 @@ const save = (req, res) =>{
     });
 }
 const deleteComment = (req, res) =>{
-    const commentId = req.params.id;
-    const publicationId = req.params.publication;
+    const commentId = req.params.id
 
-    Comment.find({"student": req.student.id,"publication": publicationId, "_id": commentId}).remove((err, commentRemoved)=>{
+    Comment.find({"student": req.student.id, "_id": commentId}).remove((err, commentRemoved)=>{
         if (err || !commentRemoved) {
             return res.status(500).send('no se pudo encontrar el comentario');
         }
@@ -51,7 +50,7 @@ const commentPublication = (req, res) =>{
     // const studentId= req.params.id;
 
     let page = 1;
-    const itemsPerPage = 3;
+    const itemsPerPage = 2;
 
     if (req.params.page) {
         page = req.params.page;
@@ -59,7 +58,7 @@ const commentPublication = (req, res) =>{
 
     Comment.find({"publication": publicationId})
         .sort("-created_at")
-        .populate('publication', '-__v')
+        .populate('publication student', '-__v')
         .paginate(page, itemsPerPage, (err, comments, total) =>{
             if (err || !comments) {
                 return res.status(500).send('no se pudo encontrar comentarios');

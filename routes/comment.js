@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
 const uploads = multer({storage});
 
 api.post('/save/:publication', check.auth, commentController.save);
-api.delete('/deleteComment/:id/:publication', check.auth, commentController.deleteComment);
+api.delete('/deleteComment/:id', check.auth, commentController.deleteComment);
 api.get('/commentPublication/:publication/:page?', check.auth, commentController.commentPublication);
 api.post('/upload/:id', [check.auth, uploads.single('upload0')], commentController.upload);
 api.get('/media/:file', commentController.media);

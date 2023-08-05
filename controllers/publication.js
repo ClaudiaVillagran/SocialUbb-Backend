@@ -115,9 +115,11 @@ const upload = (req, res) => {
     const imageSplit = image.split("\.");
     const extension = imageSplit[1];
     console.log(extension);
+   
     // Comprobar extension
-    if (extension != "png" || extension != "jpg" || extension != "jpeg" || extension != "gif") {
+    if (extension != "png" && extension != "jpg" && extension != "jpeg" && extension != "gif") {
 
+        
         // Borrar archivo subido
         const filePath = req.file.path;
         const fileDeleted = fs.unlinkSync(filePath);
@@ -129,7 +131,7 @@ const upload = (req, res) => {
         });
     }
 
-    // Si si es correcta, guardar imagen en bbdd
+    // Si si es corconsole.log(image)recta, guardar imagen en bbdd
     Publication.findOneAndUpdate({ student: req.student.id, _id: publicationId }, { image: req.file.filename }, { new: true }, (error, publicationUpdated) => {
         if (error || !publicationUpdated) {
             return res.status(500).send({
@@ -174,7 +176,7 @@ const feed = async (req, res) => {
         page = req.params.page;
     }
     //elementos por pagina
-    let itemsPerPage = 10;
+    let itemsPerPage = 5;
     //sacar un array de id, elementos que estan dentro de la coleccion follow, como usuario identificado
     try {
         const myFollows = await followService.followStudentIds(req.student.id);

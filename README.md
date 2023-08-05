@@ -110,7 +110,7 @@ Clonar el repositorio del proyecto como se menciona en el apartado "Clonación d
 
 Luego de haber clonado el repositorio se debe mover hacia la carpeta raiz del proyecto, para esto se debe ejecutar el siguiente comando:
 
-cd Ceewebapp
+cd SocialUbb-Backend
 
 Instalar dependencias del proyecto ambiente de producción
 Si se encuentra en la carpeta raiz del proyecto y desea instalar las dependencias, se debe ejecutar el siguiente comando:
