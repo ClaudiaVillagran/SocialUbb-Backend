@@ -10,7 +10,7 @@ const publicationSchema = Schema({
         required: true
     },
     image: String,
-    categories: String,
+    categories: [String],
     created_at: {
         type: Date,
         default: Date.now

@@ -13,6 +13,7 @@ const save = (req, res) => {
     if (!params.text) {
         return res.status(400).send("Debe ingresar un texto");
     }
+    console.log(params)
     //crear y rellenar datos del modelo
     let newPublication = new Publication(params);
     newPublication.student = req.student.id;
@@ -114,12 +115,10 @@ const upload = (req, res) => {
     // Sacar la extension del archivo
     const imageSplit = image.split("\.");
     const extension = imageSplit[1];
-    console.log(extension);
    
     // Comprobar extension
     if (extension != "png" && extension != "jpg" && extension != "jpeg" && extension != "gif") {
 
-        
         // Borrar archivo subido
         const filePath = req.file.path;
         const fileDeleted = fs.unlinkSync(filePath);
