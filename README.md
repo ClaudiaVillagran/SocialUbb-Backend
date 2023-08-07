@@ -15,6 +15,51 @@ El proyecto "SOCIALUBB" es una aplicación web que corre sobre el siguiente soft
 -MongoAtlas
 -NPM
 
+## **Conexión a la base de datos**
+
+Para obtener un string de conexion de atlas lo primero que se debe hacer es ir a la página de MongoAtlas, se registra y le pedirá que ingrese un nombre y contraseña para una base de datos. Crea la nueva base de datos y luego en el menú de la izquierda selecciona "Clusters" y luego "Connect" y selecciona "Connect your application" y copia el string de conexion. Este string de conexion debe ser para el que se entrega con la siguiente configuracion:
+
+NodeJS
+2.2.12 or later
+Con esto deberia entregarse un string de conexion tal que asi:
+
+```
+mongodb+srv://SocialUbb:<password>@socialubbcluster.n4rqyez.mongodb.net/SocialUbb?retryWrites=true&w=majority
+```
+
+Entre las etiquetas < > se debe reemplazar el password por el que se le entrega al crear la base de datos.
+
+Este string de conexion debe ser reemplazado en el archivo .env que se encuentra en la raiz del proyecto, en la variable de entorno DB.
+
+# **DOCKER**
+
+Con una terminal situarse dentro del directorio raiz del proyecto, para esto se debe estar en el mismo directorio donde se hizo el clon del proyecto (branch main) y ejecutar el siguiente comando:
+
+```
+cd SocialUbb-Backend
+```
+
+Para construir la imagen docker del backend, se debe ejecutar el siguiente comando desde la carpeta raiz del proyecto:
+
+```
+docker build -t socialubb-backend . 
+```
+
+Una vez creado el contenedor de docker, se debe ejecutar el siguiente comando para correr el contenedor:
+
+```
+docker run --rm -ti -p 3000:3000 -v ${pwd}:/home socialubb-backend
+```
+**pwd: es la ruta del directorio raiz del backend, asi que es importante ejecutar el comando desde la carpeta SocialUbb-Backend como se especifica.**
+
+Luego se debe acceder a la carpeta del proyecto, para esto se debe ejecutar los siguientes comando:
+
+```
+cd SocialUbb-Backend
+npm install
+np run dev
+```
+
 Clonación del repositorio 
 
 Para obtener una copia del proyecto se debe clonar el repositorio de GitHub, para esto se debe ejecutar el siguiente comando en la terminal:
@@ -25,33 +70,15 @@ PARA CLONAR REPOSITORIO DE BACKEND
 git clone https://github.com/ClaudiaVillagran/SocialUbb-Backend.git
 ```
 
-PARA CLONAR REPOSITORIO DE FRONTEND
-
-```
-git clone https://github.com/ClaudiaVillagran/SocialUbb-Frontend.git
-```
-
 Variables de entorno
 
-Se debe generar un archivo .env en la carpeta frontend y backend respectivamente, el cual debe contener las siguientes variables de entorno:
+Se debe generar un archivo .env en la carpeta backend, el cual debe contener las siguientes variables de entorno:
 
 BACKEND:
 
 ```
 DB= mongodb+srv://SocialUbb:9RLszlBSkQoXKa50@socialubbcluster.n4rqyez.mongodb.net/SocialUbb?retryWrites=true&w=majority
 PORT=80
-```
-
-FRONTEND:
-
-```
-cd SocialUbb-Frontend
-cd helpers
-nano Global.jsx
-```
-
-```
-url:"http://ipservidor:1332/api/"
 ```
 
 Instalar dependencias del proyecto ambiente de desarrollo
@@ -169,6 +196,11 @@ Para modificar el archivo .env se debe ejecutar el siguiente comando:
 ```
 nano .env
 ```
+
+Dentro del .env, deben exitir dos variables necesarias
+
+PORT=80
+DB=<urlDeConexionGeneradaeEnMongoatlas>
 
 Para ejecutar el proyecto se debe ejecutar el siguiente comando en la terminal:
 
