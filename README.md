@@ -55,7 +55,7 @@ docker run --rm -ti -p 3000:3000 -v ${pwd}:/home socialubb-backend
 Luego se debe acceder a la carpeta del proyecto, para esto se debe ejecutar los siguientes comando:
 
 ```
-cd SocialUbb-Backend
+cd home
 npm install
 np run dev
 ```
