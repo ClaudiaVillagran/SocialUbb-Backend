@@ -8,12 +8,6 @@ const Publication = require('../models/publication');
 const Follow = require('../models/follow');
 const validate = require('../helpers/validate');
 
-const pruebaStudent = (req, res) => {
-    return res.status(200).send({
-        menssage:"prueba ruta"
-    })
-}
-
 const register = (req, res) => {
     //registrar datos de la peticion
     const params = req.body
@@ -36,7 +30,6 @@ const register = (req, res) => {
           message: "Ingrese un dominio valido en el campo email",
         });
       }
-      console.log(params.email)
     //control de usuarios duplicados
         //con el $or decimos que se debe cumplir una condicion u otra
     Student.find({
@@ -348,7 +341,6 @@ const counter = async (req, res) => {
 
 };
 module.exports = {
-    pruebaStudent,
     register,
     login,
     profile,

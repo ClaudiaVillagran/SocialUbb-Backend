@@ -32,11 +32,13 @@ const studentRoutes = require('./routes/student');
 const followRoutes = require('./routes/follow');
 const publicationRoutes = require('./routes/publication');
 const commentRoutes = require('./routes/comment');
+const likeRoutes = require('./routes/like');
 
 app.use("/api/student", studentRoutes);
 app.use("/api/follow", followRoutes);
 app.use('/api/publication', publicationRoutes);
 app.use('/api/comment', commentRoutes);
+app.use('/api/like', likeRoutes);
 
 //poner servidor a escuchar peticiones
 app.listen(process.env.PORT, ()=>{

@@ -1,10 +1,8 @@
 const Publication = require('../models/publication');
-
 const fs = require('fs');
 const path = require('path');
-
 const followService = require('../services/followStudentIds');
-
+const likeService = require('../services/likePublicationId');
 //guardar publicaciones
 const save = (req, res) => {
     //recorger datos del body
@@ -13,7 +11,6 @@ const save = (req, res) => {
     if (!params.text) {
         return res.status(400).send("Debe ingresar un texto");
     }
-    console.log(params)
     //crear y rellenar datos del modelo
     let newPublication = new Publication(params);
     newPublication.student = req.student.id;
@@ -37,16 +34,33 @@ const detailPublication = (req, res) => {
     const publicationId = req.params.id;
 
     //find con la condicion id
-    Publication.findById(publicationId, (err, publicationFound) => {
+    Publication.findById(publicationId, async (err, publicationFound) => {
             if (err || !publicationFound) {
                 return res.status(500).send('no se pudo encontrar la publicacion');
             }
+            let likePublication = await likeService.likePublication(publicationId)
             return res.status(200).send({
                 status: "success",
                 message: 'Detalle de la publicacion solicitada',
-                publicationFound
+                publicationFound,
+                likes: likePublication.likes
             });
         });
+};
+const publicationWithLike = async (req, res) => {
+    try {
+        const publicationId = req.params.publicationId;
+        
+        const publication = await Publication.findById(publicationId).populate('likes');
+        console.log(publication)
+        return res.status(200).send({
+            status: "success",
+            message: 'Detalle de la publicacion solicitada',
+            publication
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Ha ocurrido un error al obtener la publicación con likes.' });
+    }
 };
 //eliminar publicacion
 const deletePublication = (req, res) => {
@@ -183,11 +197,12 @@ const feed = async (req, res) => {
         const allPublications =  Publication.find()
                                                     .populate('student', '-password -__v -email')
                                                     .sort('-created_at')
-                                                    .paginate(page, itemsPerPage, (err, publications, total) => {
+                                                    .paginate(page, itemsPerPage,async (err, publications, total) => {
 
                                                             if (err ||!publications) {
                                                                 return res.status(500).send('no se pudo encontrar publicaciones');
                                                             }
+                                                            
                                                             return res.status(200).send({
                                                                 status: "success",
                                                                 message: 'feed',
@@ -210,6 +225,7 @@ const feed = async (req, res) => {
 module.exports = {
     save,
     detailPublication,
+    publicationWithLike,
     deletePublication,
     publicationStudent,
     upload,

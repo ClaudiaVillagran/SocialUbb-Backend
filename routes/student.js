@@ -17,7 +17,6 @@ const storage = multer.diskStorage({
 
 const uploadImage = multer({storage});
 
-api.get("/pruebaStudent", studentController.pruebaStudent);
 api.post("/register", studentController.register);
 api.post("/login", studentController.login);
 api.get("/profile/:id", check.auth, studentController.profile);

@@ -10,6 +10,10 @@ const publicationSchema = Schema({
         required: true
     },
     image: String,
+    likes:[{
+        type: Schema.ObjectId,
+        ref: 'Like'
+    }],
     categories: [String],
     created_at: {
         type: Date,

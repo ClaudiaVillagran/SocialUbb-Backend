@@ -1,6 +1,5 @@
 //importar modelo
 const Follow = require('../models/follow');
-const Student = require('../models/student');
 
 const mongoosePaginate = require('mongoose-pagination');
 
