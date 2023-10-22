@@ -11,7 +11,7 @@ const likePublication = async(req, res) => {
             return res.status(400).json({ message: 'Ya has dado like a esta publicación.' });
          }
         let newLike = new Like ({
-            student: studentId.id,
+            student: studentId,
             publication: publicationId
         });
         
@@ -20,7 +20,7 @@ const likePublication = async(req, res) => {
         
         //Agregar la referencia del "like" al array de "likes" en la publicación
     
-        await Publication.findByIdAndUpdate(publicationId, {$push: { likes: newLike}})
+        await Publication.findByIdAndUpdate(publicationId, {$push: { likes: newLike}}).populate('student')
         return res.status(200).send({
                     status: 'success',
                     message: 'like guardado',
