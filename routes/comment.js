@@ -3,6 +3,7 @@ const api = express.Router();
 const commentController = require('../controllers/comments');
 const check = require('../middlewares/auth');
 const multer = require('multer');
+const trimRequest = require("trim-request");
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -15,10 +16,12 @@ const storage = multer.diskStorage({
 
 const uploads = multer({storage});
 
-api.post('/save/:publication', check.auth, commentController.save);
-api.delete('/deleteComment/:id', check.auth, commentController.deleteComment);
-api.get('/commentPublication/:publication/:page?', check.auth, commentController.commentPublication);
-api.post('/upload/:id', [check.auth, uploads.single('upload0')], commentController.upload);
-api.get('/media/:file', commentController.media);
+api.post('/commentPublication/:publicationId',trimRequest.all, check.auth, commentController.save);
+api.delete('/deleteComment/:commentId/:publicationId',trimRequest.all, check.auth, commentController.deleteComment);
+api.get('/getComments/:publicationId/:page?',trimRequest.all, check.auth, commentController.commentPublication);
+
+api.get('/getComment/:commentId',trimRequest.all, check.auth, commentController.commentById);
+// api.post('/upload/:id', [check.auth, uploads.single('upload0')], commentController.upload);
+// api.get('/media/:file', commentController.media);
 
 module.exports = api;

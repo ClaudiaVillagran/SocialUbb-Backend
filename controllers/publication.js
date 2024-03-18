@@ -7,13 +7,15 @@ const likeService = require('../services/likePublicationId');
 const save = (req, res) => {
     //recorger datos del body
     const params = req.body;
+    console.log(params)
     //si no me llegan respuesta negativa
     if (!params.text) {
         return res.status(400).send("Debe ingresar un texto");
     }
     //crear y rellenar datos del modelo
     let newPublication = new Publication(params);
-    newPublication.student = req.student.id;
+    // console.log(newPublication)
+    newPublication.student = req.user.studentId;
     //guardar publicacion en la base de datos
     newPublication.save((err, publicationStored) => {
 
@@ -31,7 +33,7 @@ const save = (req, res) => {
 //sacar una publicacion
 const detailPublication = (req, res) => {
     //sacar id de la url
-    const publicationId = req.params.id;
+    const publicationId = req.params.publicationId;
 
     //find con la condicion id
     Publication.findById(publicationId, async (err, publicationFound) => {
@@ -65,16 +67,18 @@ const publicationWithLike = async (req, res) => {
 //eliminar publicacion
 const deletePublication = (req, res) => {
     //sacar id de la url
-    const publicationId = req.params.id;
+    const publicationId = req.params.publicationId;
+    console.log(publicationId);
     //find con la condicion id
-    Publication.find({"student": req.student.id, "_id": publicationId}).remove((err, publicationRemoved) => {
+    Publication.find({"student": req.user.studentId, "_id": publicationId}).remove((err, publicationRemoved) => {
         if (err ||!publicationRemoved) {
             return res.status(500).send('no se pudo encontrar la publicacion');
         }
         return res.status(200).send({
             status: "success",
             message: 'Publicacion eliminada',
-            publicationRemoved
+            publicationRemoved,
+            deletedPublicationId: publicationId
         });
     });
 };
@@ -131,8 +135,8 @@ const upload = (req, res) => {
     const extension = imageSplit[1];
    
     // Comprobar extension
-    if (extension != "png" && extension != "jpg" && extension != "jpeg" && extension != "gif") {
-
+    if (extension != "png" && extension != "jpg" && extension != "jpeg" && extension != "gif" && extension != "PNG" && extension != "JPG" && extension != "JPGE" && extension != "GIF") {
+        console.log(extension)
         // Borrar archivo subido
         const filePath = req.file.path;
         const fileDeleted = fs.unlinkSync(filePath);
@@ -145,7 +149,7 @@ const upload = (req, res) => {
     }
 
     // Si si es corconsole.log(image)recta, guardar imagen en bbdd
-    Publication.findOneAndUpdate({ student: req.student.id, _id: publicationId }, { image: req.file.filename }, { new: true }, (error, publicationUpdated) => {
+    Publication.findOneAndUpdate({ student: req.student.id, "_id": publicationId }, { file: req.file.filename }, { new: true }, (error, publicationUpdated) => {
         if (error || !publicationUpdated) {
             return res.status(500).send({
                 status: "error",
@@ -192,7 +196,7 @@ const feed = async (req, res) => {
     let itemsPerPage = 5;
     //sacar un array de id, elementos que estan dentro de la coleccion follow, como usuario identificado
     try {
-        const myFollows = await followService.followStudentIds(req.student.id);
+        const myFollows = await followService.followStudentIds(req.user.studentId);
         // const publications = await Publication.find({student: myFollows.following}).populate('student').sort('-created_at')
         const allPublications =  Publication.find()
                                                     .populate('student', '-password -__v -email')

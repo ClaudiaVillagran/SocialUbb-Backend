@@ -12,11 +12,11 @@ const save = (req, res) => {
     const params = req.body;
 
     //sacar el id del estudiante identificado
-    const identity = req.student;
-
+    const identity = req.user.studentId;
+    console.log(identity);
     //crear objeto de follow
     let userToFollow = new Follow({
-        student: identity.id,
+        student: identity,
         followed: params.followed
     });
     //gaurdar objetos de follow en la base de datos
@@ -39,7 +39,7 @@ const save = (req, res) => {
 //accion de dejar follow
 const unFollow = (req, res) => {
     //conseguir id del usuario identificado
-    const identityId = req.student.id;
+    const identityId = req.user.studentId;
     //conseguir id del usuario que quiero dejar de seguir
     const followedId = req.params.id;
     //eliminar follow

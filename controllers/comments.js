@@ -1,132 +1,226 @@
 // const Student = require('../models/student');
 // const Publication = require('../models/publication');
-const Comment = require('../models/comment');
-const fs = require('fs');
-const path = require('path');
+const Publication = require("../models/publication");
+const Comment = require("../models/comment");
 
-const save = (req, res) =>{
-
+const save = async (req, res) => {
+  try {
     const params = req.body;
-    console.log(params.text)
+    const publicationId = req.params.publicationId;
+    const studentId = req.user.studentId;
+    console.log(params);
 
-    const publicationId= req.params.publication;
-    
     if (!params.text) {
-        return res.status(400).send("Debe ingresar un texto");
+      return res.status(400).send("Debe ingresar un texto");
+    }
+    // console.log("da", params.text.replace(/\s/g, "").length);
+    if (params.text.replace(/\s/g, "").length <= 0) {
+      return res.status(400).send("Debe ingresar un texto");
     }
 
-    let newComment = new Comment(params);
-    newComment.student = req.student.id;
-    newComment.publication=publicationId
-
-    newComment.save((err, commentStored) =>{
-        if (err || !commentStored) {
-            return res.status(500).send('no se pudo guardar el comentario');
-        }
-        return res.status(200).send({
-            status: "success",
-            message: 'Comentario guardado',
-            commentStored
-        });
-
+    let newComment = new Comment({
+      student: studentId,
+      publication: publicationId,
+      text: params.text,
     });
-}
-const deleteComment = (req, res) =>{
-    const commentId = req.params.id
+    // console.log(newComment);
+    await newComment.save();
 
-    Comment.find({"student": req.student.id, "_id": commentId}).remove((err, commentRemoved)=>{
-        if (err || !commentRemoved) {
-            return res.status(500).send('no se pudo encontrar el comentario');
-        }
-        return res.status(200).send({
-            status: "success",
-            message: 'Comentario eliminado',
-            commentRemoved
-        });
+    const savedComment = await Comment.findById(newComment._id).populate(
+      "student"
+    );
+
+    // await Publication.findByIdAndUpdate(
+    //   publicationId,
+    //   { $push: { comments: newComment } },
+    //   { new: true }
+    // ).populate("student ");
+    const updatedPublication = await Publication.findByIdAndUpdate(
+      publicationId,
+      { $push: { comments: newComment._id } },
+      { new: true }
+    ).populate({ path: 'comments', populate: { path: 'student' } }).populate('student');
+
+
+
+    
+    return res.status(200).send({
+      status: "success",
+      message: "comentario guardado",
+      comment: savedComment,
+      updatedPublication,
     });
-}
-const commentPublication = (req, res) =>{
-    const publicationId = req.params.publication;
-    // const studentId= req.params.id;
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Ha ocurrido un error al agregar el comentario." });
+  }
+};
 
-    let page = 1;
-    const itemsPerPage = 2;
+const deleteComment = async (req, res) => {
+  const commentId = req.params.commentId;
+  const publicationId = req.params.publicationId;
+  try {
+    const commentId = req.params.commentId;
+    const publicationId = req.params.publicationId;
 
-    if (req.params.page) {
-        page = req.params.page;
+    // Elimina el comentario de la publicación
+    const updatedPublication = await Publication.findByIdAndUpdate(
+      publicationId,
+      { $pull: { comments: commentId } },
+      { new: true }
+    );
+
+    if (!updatedPublication) {
+      return res.status(404).send("Publicación no encontrada");
     }
 
-    Comment.find({"publication": publicationId})
-        .sort("-created_at")
-        .populate('publication student', '-__v')
-        .paginate(page, itemsPerPage, (err, comments, total) =>{
-            if (err || !comments) {
-                return res.status(500).send('no se pudo encontrar comentarios');
-            }
-            return res.status(200).send({
-                status: "success",
-                message: 'Comentarios de la publicación',
-                comments,
-                page,
-                total,
-                totalPages: Math.ceil(total / itemsPerPage)
-            });
-        });
-}
-const upload = (req, res) => {
-    const commentId = req.params.id;
+    // Elimina el comentario
+    const commentRemoved = await Comment.deleteOne({ _id: commentId });
 
-    if (!req.file) {
-        return res.status(404).send({
-            status: "error",
-            message: "Petición no incluye la imagen"
-        });
+    if (!commentRemoved) {
+      return res.status(404).send("Comentario no encontrado");
     }
 
-    let image = req.file.originalname;
-
-    const imageSplit = image.split(".");
-    const extension = imageSplit[1];
-    console.log(extension)
-
-    if (extension != "png" && extension != "jpg" && extension != "jpeg" && extension != "gif") {
-
-        // Borrar archivo subido
-        const filePath = req.file.path;
-        const fileDeleted = fs.unlinkSync(filePath);
-
-        // Devolver respuesta negativa
-        return res.status(400).send({
-            status: "error",
-            message: "Extensión del fichero invalida."
-        });
-    }
-    Comment.findOneAndUpdate({student: req.student.id, _id: commentId},{image: req.file.filename}, {new:true}, (error, commentUpdated)=>{
-        if (error || !commentUpdated) {
-            return res.status(500).send({
-                status: "error",
-                message: "Error en la subida del archivo."
-            });
-        }
-        return res.status(200).send({
-            status: "success",
-            comment: commentUpdated,
-            file: req.file,
-            image
-        });
+    return res.status(200).send({
+      status: "success",
+      message: "Comentario eliminado",
+      commentRemoved,
+      student: req.user.studentId,
+      commentId: commentId,
+      publicationId: publicationId
     });
-}
-const media = (req, res) => {
-    const file = req.params.file;
-    const filePath= "./uploads/comments/"+file;
-    fs.stat(filePath, (error, exists)=>{
-        if (error || !exists) {
-            return res.status(404).send( "no existe la imagen")
-        }
-        //devolver la imagen
-        return res.sendFile(path.resolve(filePath));
+  } catch (error) {
+    console.error("Error al eliminar el comentario:", error);
+    return res.status(500).send("Error al eliminar el comentario");
+  }
+};
+// const commentPublication = (req, res) => {
+//   const publicationId = req.params.publicationId;
+//   // const studentId= req.params.id;
+
+//   // let page = 1;
+//   // const itemsPerPage = 2;
+
+//   // if (req.params.page) {
+//   //     page = req.params.page;
+//   // }
+
+//   Comment.find({ publication: publicationId })
+//     .sort("-created_at")
+//     .populate("publication student", "-__v"),
+//     (err, comments) => {
+//       if (err || !comments) {
+//         return res.status(500).send("no se pudo encontrar comentarios");
+//       }
+//       return res.status(200).send({
+//         status: "success",
+//         message: "Comentarios de la publicación",
+//         comments,
+//         // page,
+//         // total,
+//         // totalPages: Math.ceil(total / itemsPerPage)
+//       });
+//     };
+// };
+const commentPublication = (req, res) => {
+  const publicationId = req.params.publicationId;
+
+  Comment.find({ publication: publicationId })
+    .sort("created_at")
+    .populate("publication student", "-__v")
+    .exec((err, comments) => {
+      if (err || !comments) {
+        return res.status(500).send("No se pudo encontrar comentarios");
+      }
+      return res.status(200).send({
+        status: "success",
+        message: "Comentarios de la publicación",
+        comments,
+      });
     });
 };
+const commentById = (req, res) => {
+  const commentId = req.params.commentId;
+
+  Comment.find({ _id: commentId })
+    .sort("created_at")
+    .populate("publication student", "-__v")
+    .exec((err, comment) => {
+      if (err || !comment) {
+        return res.status(500).send("No se pudo encontrar comentarios");
+      }
+      return res.status(200).send({
+        status: "success",
+        message: "Comentario",
+        comment,
+      });
+    });
+};
+
+// const upload = (req, res) => {
+//   const commentId = req.params.id;
+
+//   if (!req.file) {
+//     return res.status(404).send({
+//       status: "error",
+//       message: "Petición no incluye la imagen",
+//     });
+//   }
+
+//   let image = req.file.originalname;
+
+//   const imageSplit = image.split(".");
+//   const extension = imageSplit[1];
+//   console.log(extension);
+
+//   if (
+//     extension != "png" &&
+//     extension != "jpg" &&
+//     extension != "jpeg" &&
+//     extension != "gif"
+//   ) {
+//     // Borrar archivo subido
+//     const filePath = req.file.path;
+//     const fileDeleted = fs.unlinkSync(filePath);
+
+//     // Devolver respuesta negativa
+//     return res.status(400).send({
+//       status: "error",
+//       message: "Extensión del fichero invalida.",
+//     });
+//   }
+//   Comment.findOneAndUpdate(
+//     { student: req.student.id, _id: commentId },
+//     { image: req.file.filename },
+//     { new: true },
+//     (error, commentUpdated) => {
+//       if (error || !commentUpdated) {
+//         return res.status(500).send({
+//           status: "error",
+//           message: "Error en la subida del archivo.",
+//         });
+//       }
+//       return res.status(200).send({
+//         status: "success",
+//         comment: commentUpdated,
+//         file: req.file,
+//         image,
+//       });
+//     }
+//   );
+// };
+// const media = (req, res) => {
+//   const file = req.params.file;
+//   const filePath = "./uploads/comments/" + file;
+//   fs.stat(filePath, (error, exists) => {
+//     if (error || !exists) {
+//       return res.status(404).send("no existe la imagen");
+//     }
+//     //devolver la imagen
+//     return res.sendFile(path.resolve(filePath));
+//   });
+// };
 // const feed = async (req, res) => {
 //     let page = 1;
 //     let itemsPerPage = 10;
@@ -158,9 +252,10 @@ const media = (req, res) => {
 // }
 
 module.exports = {
-    save,
-    deleteComment,
-    commentPublication,
-    upload,
-    media,
+  save,
+  deleteComment,
+  commentPublication,
+  commentById
+  // upload,
+  // media,
 };

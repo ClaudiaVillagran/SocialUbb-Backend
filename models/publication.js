@@ -9,12 +9,16 @@ const publicationSchema = Schema({
         type: String,
         required: true
     },
-    image: String,
+    file: String,
     likes:[{
         type: Schema.ObjectId,
         ref: 'Like'
     }],
-    categories: [String],
+    comments:[{
+        type: Schema.ObjectId,
+        ref: 'Comment'
+    }],
+    hashtags: [String],
     created_at: {
         type: Date,
         default: Date.now

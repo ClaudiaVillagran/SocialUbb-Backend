@@ -4,7 +4,7 @@ const publicationController = require('../controllers/publication');
 const likeController = require('../controllers/like');
 const check = require('../middlewares/auth');
 const multer = require('multer');
-
+const trimRequest = require("trim-request");
 //configuracion de multer
 
 const storage = multer.diskStorage({
@@ -18,13 +18,13 @@ const storage = multer.diskStorage({
 
 const uploads = multer({storage});
 
-api.post('/save', check.auth, publicationController.save);
-api.get('/detailPublication/:id', check.auth, publicationController.detailPublication);
-api.get('/publicationWithLike/:publicationId', check.auth, publicationController.publicationWithLike)
-api.delete('/deletePublication/:id', check.auth, publicationController.deletePublication);
-api.get('/publicationStudent/:id/:page?', check.auth, publicationController.publicationStudent);
-api.post('/upload/:id', [check.auth, uploads.single('upload0')], publicationController.upload);
-api.get('/media/:file', publicationController.media);
-api.get('/feed/:page?', check.auth, publicationController.feed);
+api.post('/save',trimRequest.all, check.auth, publicationController.save);
+api.get('/detailPublication/:publicationId',trimRequest.all, check.auth, publicationController.detailPublication);
+api.get('/publicationWithLike/:publicationId',trimRequest.all, check.auth, publicationController.publicationWithLike)
+api.delete('/deletePublication/:publicationId',trimRequest.all, check.auth, publicationController.deletePublication);
+api.get('/publicationStudent/:id/:page?',trimRequest.all, check.auth, publicationController.publicationStudent);
+api.post('/upload/:id',trimRequest.all, [check.auth, uploads.single('upload0')], publicationController.upload);
+api.get('/media/:file',trimRequest.all, publicationController.media);
+api.get('/feed/:page?',trimRequest.all, check.auth, publicationController.feed);
 
 module.exports = api;
