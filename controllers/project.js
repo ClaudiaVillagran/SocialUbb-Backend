@@ -1,91 +1,98 @@
-const Publication = require('../models/publication');
+const Project = require('../models/project');
 const fs = require('fs');
 const path = require('path');
 const followService = require('../services/followStudentIds');
-const likeService = require('../services/likePublicationId');
+const likeService = require('../services/likeProjectId');
 //guardar publicaciones
 const save = (req, res) => {
     //recorger datos del body
     const params = req.body;
     // console.log(params)
     //si no me llegan respuesta negativa
-    if (!params.text) {
-        return res.status(400).send("Debe ingresar un texto");
+    if (!params.description || !params.title) {
+        return res.status(400).send("Debe ingresar un texto o un título");
     }
-    //crear y rellenar datos del modelo
-    let newPublication = new Publication(params);
+    
+    let newProject = new Project(params);
+    // console.log(newProject)
     // console.log(newPublication)
-    newPublication.student = req.user.studentId;
+    newProject.student = req.user.studentId;
     //guardar publicacion en la base de datos
-    newPublication.save((err, publicationStored) => {
+    newProject.save((err, projectStored) => {
+        if (err || !projectStored) {
+            return res.status(500).send('No se pudo guardar la publicación');
+        }
 
-            if (err || !publicationStored) {
-                return res.status(500).send('no se pudo guardar la publicacion');
+        // Realizar el populate del campo student
+        Project.findById(projectStored._id).populate('student').exec((err, populatedProject) => {
+            if (err || !populatedProject) {
+                return res.status(500).send('Error al obtener la información completa del proyecto');
             }
+
             return res.status(200).send({
                 status: "success",
-                message: 'Publicacion guardada',
-                publication: newPublication
+                message: 'Publicación guardada',
+                project: populatedProject
             });
-
+        });
     });
 };
 //sacar una publicacion
-const detailPublication = (req, res) => {
+const detailProject = (req, res) => {
     //sacar id de la url
-    const publicationId = req.params.publicationId;
+    const projectId = req.params.projectId;
 
     //find con la condicion id
-    Publication.findById(publicationId, async (err, publicationFound) => {
-            if (err || !publicationFound) {
+    Project.findById(projectId, async (err, projectFound) => {
+            if (err || !projectFound) {
                 return res.status(500).send('no se pudo encontrar la publicacion');
             }
-            let likePublication = await likeService.likePublication(publicationId)
+            let likeProject = await likeService.likeProject(projectId)
             return res.status(200).send({
                 status: "success",
                 message: 'Detalle de la publicacion solicitada',
-                publicationFound,
-                likes: likePublication.likes
+                projectFound,
+                likes: likeProject.likes
             });
         });
 };
-const publicationWithLike = async (req, res) => {
+const projectWithLike = async (req, res) => {
     try {
-        const publicationId = req.params.publicationId;
+        const projectId = req.params.projectId;
         
-        const publication = await Publication.findById(publicationId).populate('likes');
-        // console.log(publication)
+        const project = await Project.findById(projectId).populate('likes');
+        // console.log(project)
         return res.status(200).send({
             status: "success",
             message: 'Detalle de la publicacion solicitada',
-            publication
+            project
         });
     } catch (error) {
         res.status(500).json({ message: 'Ha ocurrido un error al obtener la publicación con likes.' });
     }
 };
 //eliminar publicacion
-const deletePublication = (req, res) => {
+const deleteProject = (req, res) => {
     //sacar id de la url
-    const publicationId = req.params.publicationId;
-    // console.log(publicationId);
+    const projectId = req.params.projectId;
+    // console.log(projectId);
     //find con la condicion id
-    Publication.find({"student": req.user.studentId, "_id": publicationId}).remove((err, publicationRemoved) => {
-        if (err ||!publicationRemoved) {
+    Project.find({"student": req.user.studentId, "_id": projectId}).remove((err, projectRemoved) => {
+        if (err ||!projectRemoved) {
             return res.status(500).send('no se pudo encontrar la publicacion');
         }
         return res.status(200).send({
             status: "success",
             message: 'Publicacion eliminada',
-            publicationRemoved,
-            deletedPublicationId: publicationId
+            projectRemoved,
+            deletedProjectId: projectId
         });
     });
 };
 
 //listar publicaciones de un usuario especifico
 
-const publicationStudent = (req, res) => {
+const projectStudent = (req, res) => {
     //sacar id del usuario 
     const studentId = req.params.id;
     //controlar las paginas
@@ -97,17 +104,17 @@ const publicationStudent = (req, res) => {
     }
 
     //find, pupulate y paginacion
-    Publication.find({"student": studentId})
+    Project.find({"student": studentId})
         .sort("-created_at")
         .populate('student', '-password -__v -email')
-        .paginate(page, itemsPerPage, (err, publications, total) => {
-            if (err ||!publications) {
+        .paginate(page, itemsPerPage, (err, projects, total) => {
+            if (err ||!projects) {
                 return res.status(500).send('no se pudo encontrar publicaciones');
             }
             return res.status(200).send({
                 status: "success",
-                message: 'Publicaciones del estudiante',
-                publications,
+                message: 'Proyectos del estudiante',
+                projects,
                 page,
                 total,
                 totalPages: Math.ceil(total / itemsPerPage)
@@ -117,7 +124,7 @@ const publicationStudent = (req, res) => {
 //subir ficheros
 const upload = (req, res) => {
     // Sacar publication id
-    const publicationId = req.params.id;
+    const projectId = req.params.id;
 
     // Recoger el fichero de imagen y comprobar que existe
     if (!req.file) {
@@ -149,8 +156,8 @@ const upload = (req, res) => {
     }
 
     // Si si es corconsole.log(image)recta, guardar imagen en bbdd
-    Publication.findOneAndUpdate({ student: req.student.id, "_id": publicationId }, { file: req.file.filename }, { new: true }, (error, publicationUpdated) => {
-        if (error || !publicationUpdated) {
+    Project.findOneAndUpdate({ student: req.student.id, "_id": projectId }, { file: req.file.filename }, { new: true }, (error, projectUpdated) => {
+        if (error || !projectUpdated) {
             return res.status(500).send({
                 status: "error",
                 message: "Error en la subida del archivo"
@@ -160,7 +167,7 @@ const upload = (req, res) => {
         // Devolver respuesta
         return res.status(200).send({
             status: "success",
-            publication: publicationUpdated,
+            project: projectUpdated,
             file: req.file,
             image
         });
@@ -188,25 +195,23 @@ const media = (req, res) => {
 //listar publicaciones
 const feed = async (req, res) => {
     //sacar la pagina actual
-    // console.log('first')
+    
     let page = 1;
     if (req.params.page) {
         page = req.params.page;
     }
-    
     //elementos por pagina
     let itemsPerPage = 5;
     //sacar un array de id, elementos que estan dentro de la coleccion follow, como usuario identificado
     try {
         const myFollows = await followService.followStudentIds(req.user.studentId);
-        // console.log(myFollows)
         // const publications = await Publication.find({student: myFollows.following}).populate('student').sort('-created_at')
-        const allPublications =  Publication.find()
+        const allPublications =  Project.find()
                                                     .populate('student', '-password -__v -email')
                                                     .sort('-created_at')
-                                                    .paginate(page, itemsPerPage,async (err, publications, total) => {
+                                                    .paginate(page, itemsPerPage,async (err, projects, total) => {
 
-                                                            if (err ||!publications) {
+                                                            if (err ||!projects) {
                                                                 return res.status(500).send('no se pudo encontrar publicaciones');
                                                             }
                                                             
@@ -214,7 +219,7 @@ const feed = async (req, res) => {
                                                                 status: "success",
                                                                 message: 'feed',
                                                                 following: myFollows.following,
-                                                                publications,
+                                                                projects,
                                                                 page,
                                                                 total,
                                                                 totalPages: Math.ceil(total / itemsPerPage)
@@ -231,10 +236,10 @@ const feed = async (req, res) => {
 
 module.exports = {
     save,
-    detailPublication,
-    publicationWithLike,
-    deletePublication,
-    publicationStudent,
+    detailProject,
+    projectWithLike,
+    deleteProject,
+    projectStudent,
     upload,
     media,
     feed

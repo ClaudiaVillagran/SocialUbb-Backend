@@ -1,12 +1,12 @@
 // const Student = require('../models/student');
-// const Publication = require('../models/publication');
-const Publication = require("../models/publication");
-const Comment = require("../models/comment");
+// const Project = require('../models/Project');
+const Project = require("../models/project");
+const Comment = require("../models/CommentProject");
 
 const save = async (req, res) => {
   try {
     const params = req.body;
-    const publicationId = req.params.publicationId;
+    const projectId = req.params.projectId;
     const studentId = req.user.studentId;
     // console.log(params);
 
@@ -20,7 +20,7 @@ const save = async (req, res) => {
 
     let newComment = new Comment({
       student: studentId,
-      publication: publicationId,
+      project: projectId,
       text: params.text,
     });
     // console.log(newComment);
@@ -30,13 +30,13 @@ const save = async (req, res) => {
       "student"
     );
 
-    // await Publication.findByIdAndUpdate(
-    //   publicationId,
+    // await Project.findByIdAndUpdate(
+    //   projectId,
     //   { $push: { comments: newComment } },
     //   { new: true }
     // ).populate("student ");
-    const updatedPublication = await Publication.findByIdAndUpdate(
-      publicationId,
+    const updatedProject = await Project.findByIdAndUpdate(
+      projectId,
       { $push: { comments: newComment._id } },
       { new: true }
     ).populate({ path: 'comments', populate: { path: 'student' } }).populate('student');
@@ -48,7 +48,7 @@ const save = async (req, res) => {
       status: "success",
       message: "comentario guardado",
       comment: savedComment,
-      updatedPublication,
+      updatedProject,
     });
   } catch (error) {
     res
@@ -58,20 +58,18 @@ const save = async (req, res) => {
 };
 
 const deleteComment = async (req, res) => {
-  const commentId = req.params.commentId;
-  const publicationId = req.params.publicationId;
   try {
     const commentId = req.params.commentId;
-    const publicationId = req.params.publicationId;
+    const projectId = req.params.projectId;
 
     // Elimina el comentario de la publicación
-    const updatedPublication = await Publication.findByIdAndUpdate(
-      publicationId,
+    const updatedProject = await Project.findByIdAndUpdate(
+      projectId,
       { $pull: { comments: commentId } },
       { new: true }
     );
 
-    if (!updatedPublication) {
+    if (!updatedProject) {
       return res.status(404).send("Publicación no encontrada");
     }
 
@@ -88,15 +86,15 @@ const deleteComment = async (req, res) => {
       commentRemoved,
       student: req.user.studentId,
       commentId: commentId,
-      publicationId: publicationId
+      projectId: projectId
     });
   } catch (error) {
     console.error("Error al eliminar el comentario:", error);
     return res.status(500).send("Error al eliminar el comentario");
   }
 };
-// const commentPublication = (req, res) => {
-//   const publicationId = req.params.publicationId;
+// const commentProject = (req, res) => {
+//   const projectId = req.params.projectId;
 //   // const studentId= req.params.id;
 
 //   // let page = 1;
@@ -106,9 +104,9 @@ const deleteComment = async (req, res) => {
 //   //     page = req.params.page;
 //   // }
 
-//   Comment.find({ publication: publicationId })
+//   Comment.find({ Project: projectId })
 //     .sort("-created_at")
-//     .populate("publication student", "-__v"),
+//     .populate("Project student", "-__v"),
 //     (err, comments) => {
 //       if (err || !comments) {
 //         return res.status(500).send("no se pudo encontrar comentarios");
@@ -123,12 +121,12 @@ const deleteComment = async (req, res) => {
 //       });
 //     };
 // };
-const commentPublication = (req, res) => {
-  const publicationId = req.params.publicationId;
+const commentProject = (req, res) => {
+  const projectId = req.params.projectId;
 
-  Comment.find({ publication: publicationId })
+  Comment.find({ project: projectId })
     .sort("created_at")
-    .populate("publication student", "-__v")
+    .populate("project student", "-__v")
     .exec((err, comments) => {
       if (err || !comments) {
         return res.status(500).send("No se pudo encontrar comentarios");
@@ -145,7 +143,7 @@ const commentById = (req, res) => {
 
   Comment.find({ _id: commentId })
     .sort("created_at")
-    .populate("publication student", "-__v")
+    .populate("project student", "-__v")
     .exec((err, comment) => {
       if (err || !comment) {
         return res.status(500).send("No se pudo encontrar comentarios");
@@ -231,7 +229,7 @@ const commentById = (req, res) => {
 
 //     try {
 //         const allComments = Comment.find()
-//                                         .populate('student publication', '-__v -email -password')
+//                                         .populate('student project', '-__v -email -password')
 //                                         .sort('-created_at')
 //                                         .paginate(page, itemsPerPage,(err, comments, total)=>{
 //                                             if (err || !comments) {
@@ -254,7 +252,7 @@ const commentById = (req, res) => {
 module.exports = {
   save,
   deleteComment,
-  commentPublication,
+  commentProject,
   commentById
   // upload,
   // media,

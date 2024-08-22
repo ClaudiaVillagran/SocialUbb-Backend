@@ -8,12 +8,12 @@ const followService = require('../services/followStudentIds');
 
 //accion de guardar follow
 const save = (req, res) => {
-    //conseguir los datos del body
-    const params = req.body;
 
-    //sacar el id del estudiante identificado
+    const params = req.body;
     const identity = req.user.studentId;
-    console.log(identity);
+
+    // console.log(identity);
+    // console.log(params)
     //crear objeto de follow
     let userToFollow = new Follow({
         student: identity,
@@ -38,11 +38,13 @@ const save = (req, res) => {
 }
 //accion de dejar follow
 const unFollow = (req, res) => {
-    //conseguir id del usuario identificado
+    // console.log('first')
     const identityId = req.user.studentId;
-    //conseguir id del usuario que quiero dejar de seguir
     const followedId = req.params.id;
-    //eliminar follow
+
+    // console.log(followedId)
+
+
     Follow.findOneAndDelete({
         student: identityId,
         followed: followedId
@@ -63,11 +65,12 @@ const unFollow = (req, res) => {
 //accion listado de estudiantes que sigo
 const following = (req, res) => {
     //sacar el id del estudiante identificado
-    let identityId = req.student.id;
+    let identityId = req.user.studentId;
     //comprobar si me llega el id en la url
     if (req.params.id) {
         identityId = req.params.id;
     }
+    // console.log(identityId);
     //comprobar si me llega la pagina en la url, por defecto es la pag 1
     let page = 1
 
@@ -86,7 +89,7 @@ const following = (req, res) => {
 
             //seguidores en comun
             //sacar un array de estudiantes que sigo y me siguen
-            let followStudentIds = await followService.followStudentIds(req.student.id);
+            let followStudentIds = await followService.followStudentIds(req.user.studentId);
 
             if (error) {
                 return res.status(500).send({
@@ -111,11 +114,14 @@ const following = (req, res) => {
 
 const followers = (req, res) => {
     //sacar el id del estudiante identificado
-    let identityId = req.student.id;
+    let identityId = req.user.studentId;
     //comprobar si me llega el id en la url
     if (req.params.id) {
         identityId = req.params.id;
     }
+
+    // console.log(identityId)
+
     //comprobar si me llega la pagina en la url, por defecto es la pag 1
     let page = 1
 
@@ -125,14 +131,13 @@ const followers = (req, res) => {
     //estduiantes por pagina que quiero mostrar
     const itemsPerPage = 5;
 
-
     Follow.find({ followed: identityId})
         .populate("student", "-password -__v -email")
         .paginate(page, itemsPerPage, async (error, follows, total) => {
 
             //seguidores en comun
             //sacar un array de estudiantes que sigo y me siguen
-            let followStudentIds = await followService.followStudentIds(req.student.id);
+            let followStudentIds = await followService.followStudentIds(req.user.studentId);
 
             if (error) {
                 return res.status(500).send({

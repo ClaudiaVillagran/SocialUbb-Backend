@@ -5,6 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const followService = require("../services/followStudentIds");
 const Publication = require("../models/publication");
+const Project = require("../models/project.js");
 const Follow = require("../models/follow");
 const validate = require("../helpers/validate");
 
@@ -168,6 +169,7 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const student = await signUser(email, password);
+    // console.log(student)
     const access_token = await generateToken(
       { studentId: student._id },
       "30d",
@@ -243,7 +245,6 @@ const refreshToken = async (req, res) => {
 const profile = (req, res) => {
   //recibir el parametro de id por url
   const id = req.params.id;
-
   //sacar los datos del estudiante
   Student.findById(id)
     .select({ password: 0 })
@@ -257,6 +258,9 @@ const profile = (req, res) => {
         req.user.studentId,
         id
       );
+      const publications = await Publication.find({'student': id}).populate('student')
+      const projects = await Project.find({'student': id}).populate('student')
+   
       //devolver datos estudiante
       return res.status(200).json({
         status: "success",
@@ -264,6 +268,8 @@ const profile = (req, res) => {
         student: studentProfile,
         following: followInfo.following,
         follower: followInfo.follower,
+        publications,
+        projects
       });
     });
 };
@@ -271,6 +277,7 @@ const list = (req, res) => {
   //controlar en que pagina estamos
   let page = 1;
 
+  // console.log('a')
   if (req.params.page) {
     page = req.params.page;
   }
@@ -279,7 +286,6 @@ const list = (req, res) => {
 
   //Consulta con mongoose paginate
   let itemsPerPage = 5;
-
   Student.find()
     .select("-email -password -__v")
     .sort("_id")
@@ -290,7 +296,7 @@ const list = (req, res) => {
       let followStudentIds = await followService.followStudentIds(
         req.user.studentId
       );
-
+      // console.log(students)
       //devolver resultado
       return res.status(200).json({
         status: "success",
@@ -332,67 +338,51 @@ const list = (req, res) => {
   // });
 };
 
-const update = (req, res) => {
-  //recorger la info a actualizar
-  const studentIdentity = req.student;
-  const studentToUpdate = req.body;
-  //eliminar campos sobrantes
-  delete studentToUpdate.iat;
-  delete studentToUpdate.exp;
+const update = async (req, res) => {
+  try {
+    // Obtener la información a actualizar del cuerpo de la solicitud
+    const studentToUpdate = req.body;
+    const studentId = req.user.studentId;
+    // console.log(studentToUpdate)
+    // Eliminar campos sobrantes
+    delete studentToUpdate.iat;
+    delete studentToUpdate.exp;
 
-  //comprobar si existe el usuario
-  Student.find({
-    $or: [
-      { name: studentIdentity.name.toLowerCase() },
-      { email: studentIdentity.email.toLowerCase() },
-    ],
-  }).exec(async (error, students) => {
-    if (error) {
-      return res.status(500).send("error al crear usuario");
+    // Verificar si el usuario existe
+    const existingStudent = await Student.findById(studentId);
+
+    if (!existingStudent) {
+      return res.status(404).send("El usuario no existe");
     }
 
-    let studentIsset = false;
-
-    students.forEach((student) => {
-      if (student && student.id != studentIdentity.id) {
-        studentIsset = true;
-      }
-    });
-    if (studentIsset) {
-      return res.status(200).send("El usuario ya existe");
-    }
-
-    //si actualiza la password, cifrar
+    // Si actualiza la contraseña, cifrarla
     if (studentToUpdate.password) {
-      let pwd = await bcrypt.hash(params.password, 10);
+      const pwd = await bcrypt.hash(studentToUpdate.password, 10);
       studentToUpdate.password = pwd;
     } else {
       delete studentToUpdate.password;
     }
 
-    try {
-      //buscar y actualizar
-      let studentUpdated = await Student.findByIdAndUpdate(
-        studentIdentity.id,
-        studentToUpdate
-      );
+    // Actualizar el estudiante en la base de datos
+    const updatedStudent = await Student.findByIdAndUpdate(studentId, studentToUpdate, { new: true });
 
-      if (!studentUpdated) {
-        return res.status(500).send("error al actualizar usuario");
-      }
-      return res.status(200).json({
-        status: "success",
-        menssage: "Actualizando...",
-        student: studentUpdated,
-      });
-    } catch (error) {
-      return res.status(500).json({
-        status: "success",
-        menssage: "Error al actualizar.",
-      });
+    // console.log(updatedStudent);
+    
+    if (!updatedStudent) {
+      return res.status(500).send("Error al actualizar usuario");
     }
-  });
+
+    return res.status(200).json({
+      status: "success",
+      message: "Usuario actualizado correctamente",
+      student: updatedStudent,
+    });
+  } catch (error) {
+    console.error("Error al actualizar usuario:", error);
+    return res.status(500).send("Error al actualizar usuario");
+  }
 };
+
 
 const uploadImage = (req, res) => {
   //recoger el fichero de imagen y comprobar si existe

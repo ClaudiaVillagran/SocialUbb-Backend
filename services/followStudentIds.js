@@ -3,36 +3,36 @@ const Follow = require('../models/follow');
 const followStudentIds = async (identityStudentId) => {
     try {
         //sacar info de seguimiento
-        let following = await Follow.find({'student': identityStudentId })
-                                    .select({'_id': 0, '__v': 0, 'student': 0, 'created_at': 0})
-                                    .exec();
+        let following = await Follow.find({ 'student': identityStudentId })
+            .select({ '_id': 0, '__v': 0, 'student': 0, 'created_at': 0 })
+            .exec();
 
-        let followers = await Follow.find({'followed': identityStudentId })
-                                    .select({'_id': 0, '__v': 0, 'followed': 0, 'created_at': 0})
-                                    .exec();
+        let followers = await Follow.find({ 'followed': identityStudentId })
+            .select({ '_id': 0, '__v': 0, 'followed': 0, 'created_at': 0 })
+            .exec();
 
         //ANTES DE PROCESAR EÑ ARRAY
-                            // "student_following": [
-                            //     {
-                            //         "followed": "647a47d72d0f479a9ece06b6"
-                            //     },
-                            //     {
-                            //         "followed": "64890cb11c388f93453d7932"
-                            //     }
-                            // ],
-                            // "student_follow_me": [
-                            //     {
-                            //         "student": "64890cb11c388f93453d7932"
-                            //     }
+        // "student_following": [
+        //     {
+        //         "followed": "647a47d72d0f479a9ece06b6"
+        //     },
+        //     {
+        //         "followed": "64890cb11c388f93453d7932"
+        //     }
+        // ],
+        // "student_follow_me": [
+        //     {
+        //         "student": "64890cb11c388f93453d7932"
+        //     }
 
         //DESPUES DE PROCESAR EL ARRAY
-                            // "student_following": [
-                            //     "647a47d72d0f479a9ece06b6",
-                            //     "64890cb11c388f93453d7932"
-                            // ],
-                            // "student_follow_me": [
-                            //     "64890cb11c388f93453d7932"
-                            // ]
+        // "student_following": [
+        //     "647a47d72d0f479a9ece06b6",
+        //     "64890cb11c388f93453d7932"
+        // ],
+        // "student_follow_me": [
+        //     "64890cb11c388f93453d7932"
+        // ]
         //procesar array de id
         let followingClean = [];
 
@@ -50,18 +50,26 @@ const followStudentIds = async (identityStudentId) => {
             following: followingClean,
             followers: followersClean
         }
-    }catch (error) {
+    } catch (error) {
         return {};
     }
 };
 
 const followThisStudent = async (identityStudentId, profileStudentId) => {
+
     //sacar info de seguimiento
-    let following = await Follow.findOne({'student': identityStudentId, 'followed': profileStudentId });
+    let following = []
+    let follower = []
+    if (identityStudentId !== profileStudentId) {
+        following = await Follow.find({ 'student': identityStudentId, 'followed': profileStudentId }).populate('student followed');
+        follower = await Follow.find({ 'followed': identityStudentId, 'student': profileStudentId }).populate('student followed');
 
-    let follower = await Follow.findOne({'followed': identityStudentId , 'student': profileStudentId });
-
-    return{
+    }
+    if (identityStudentId === profileStudentId) {
+        following = await Follow.find({ 'student': identityStudentId }).populate('student followed');
+        follower = await Follow.find({ 'followed': identityStudentId }).populate('student followed');
+    }
+    return {
         following,
         follower
     }

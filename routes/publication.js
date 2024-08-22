@@ -25,6 +25,6 @@ api.delete('/deletePublication/:publicationId',trimRequest.all, check.auth, publ
 api.get('/publicationStudent/:id/:page?',trimRequest.all, check.auth, publicationController.publicationStudent);
 api.post('/upload/:id',trimRequest.all, [check.auth, uploads.single('upload0')], publicationController.upload);
 api.get('/media/:file',trimRequest.all, publicationController.media);
-api.get('/feed/:page?',trimRequest.all, check.auth, publicationController.feed);
+api.get('/feed',trimRequest.all, check.auth, publicationController.feed);
 
 module.exports = api;

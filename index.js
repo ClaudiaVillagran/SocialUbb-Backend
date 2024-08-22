@@ -10,6 +10,7 @@ const { createServer } = require("http");
 const { Server } = require("socket.io");
 const SocketServer = require('./SocketServer')
 const app = express();
+
 // const httpServer = createServer(app);
 
 dotenv.config();
@@ -53,19 +54,25 @@ const studentRoutes = require("./routes/student");
 const followRoutes = require("./routes/follow");
 const publicationRoutes = require("./routes/publication");
 const commentRoutes = require("./routes/comment");
+const commentProjectRoutes = require("./routes/commentProject");
 const likeRoutes = require("./routes/like");
+const likeProjectRoutes = require("./routes/likeProject");
 const messageRoutes = require("./routes/message");
 const conversationRoutes = require("./routes/conversation");
+const projectRoutes = require("./routes/project");
+const notificationRoutes = require("./routes/notifications");
 
 app.use("/api/student", studentRoutes);
 app.use("/api/follow", followRoutes);
 app.use("/api/publication", publicationRoutes);
 app.use("/api/comment", commentRoutes);
+app.use("/api/commentProject", commentProjectRoutes);
 app.use("/api/like", likeRoutes);
+app.use("/api/likeProject", likeProjectRoutes);
 app.use("/api/message", messageRoutes);
 app.use("/api/conversation", conversationRoutes);
-
-
+app.use("/api/project", projectRoutes);
+app.use("/api/notification", notificationRoutes);
 
 mongoose
   .connect(process.env.DB)
@@ -92,7 +99,7 @@ const io = new Server(server, {
 
 
 io.on("connection", (socket) => {
-  console.log("socketId", socket.id);
+  // console.log("socketId", socket.id);
   SocketServer(socket, io)
   // socket.on('sendMessage', (msg)=>{
   //   io.emit('recievedMessage',msg)

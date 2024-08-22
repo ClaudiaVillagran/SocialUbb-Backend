@@ -9,6 +9,7 @@ const sendMessage = async (req, res) => {
   try {
     const user_id = req.user.studentId;
     const { message, convo_id, files } = req.body;
+    // console.log(files)
     if (!convo_id || (!message && !files)) {
       res
         .status(500)

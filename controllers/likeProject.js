@@ -1,15 +1,15 @@
-const Like = require("../models/like");
-const Publication = require("../models/publication");
+const Like = require("../models/likeProject");
+const Project = require("../models/project");
 
-const likePublication = async (req, res) => {
+const likeProject = async (req, res) => {
   try {
     // console.log("object");
-    const publicationId = req.params.publicationId;
+    const projectId = req.params.projectId;
     const studentId = req.user.studentId;
-    // console.log(publicationId, studentId);
+    // console.log(projectId, studentId);
     const existingLike = await Like.findOne({
       student: studentId,
-      publication: publicationId,
+      project: projectId,
     });
     // console.log(existingLike);
     if (existingLike) {
@@ -20,13 +20,13 @@ const likePublication = async (req, res) => {
     }
     let newLike = new Like({
       student: studentId,
-      publication: publicationId,
+      project: projectId,
     });
 
     await newLike.save();
     //Agregar la referencia del "like" al array de "likes" en la publicación
 
-    await Publication.findByIdAndUpdate(publicationId, {
+    await Project.findByIdAndUpdate(projectId, {
       $push: { likes: studentId },
     }).populate("student");
     return res.status(200).send({
@@ -40,15 +40,15 @@ const likePublication = async (req, res) => {
       .json({ message: "Ha ocurrido un error al agregar el like." });
   }
 };
-const unlikePublication = async (req, res) => {
-  const publicationId = req.params.publication;
+const unlikeProject = async (req, res) => {
+  const projectId = req.params.project;
 
   const studentId = req.user.studentId;
-  console.log(publicationId, studentId);
+  // console.log(projectId, studentId);
   Like.findOneAndDelete(
     {
       student: studentId,
-      publication: publicationId,
+      project: projectId,
     },
     async (err, likeDeleted) => {
       if (err || !likeDeleted) {
@@ -56,20 +56,20 @@ const unlikePublication = async (req, res) => {
           message: "Error al eliminar el like",
         });
       }
-      await Publication.findByIdAndUpdate(publicationId, { $pull: { likes: studentId } });
+      await Project.findByIdAndUpdate(projectId, { $pull: { likes: studentId } });
       return res.status(200).send({
         status: "success",
         message: "like eliminado",
         likeDeleted,
         student: studentId,
-        publication: publicationId,
+        project: projectId,
       });
     }
   );
 };
 
-const getLikesPublication = (req, res) => {
-  const publicationId = req.params.publication;
+const getLikesProject = (req, res) => {
+  const projectId = req.params.project;
   let page = 1;
   const itemsPerPage = 5;
 
@@ -77,7 +77,7 @@ const getLikesPublication = (req, res) => {
     page = req.params.page;
   }
 
-  Like.find({ publication: publicationId })
+  Like.find({ project: projectId })
     .sort("created_at")
     .populate("student", "-__v")
     .paginate(page, itemsPerPage, (err, likes, total) => {
@@ -96,7 +96,7 @@ const getLikesPublication = (req, res) => {
 };
 
 module.exports = {
-  likePublication,
-  unlikePublication,
-  getLikesPublication,
+  likeProject,
+  unlikeProject,
+  getLikesProject,
 };

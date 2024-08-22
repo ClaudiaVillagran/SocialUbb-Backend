@@ -22,7 +22,7 @@ api.post("/login",trimRequest.all, studentController.login);
 api.post("/refreshtoken",trimRequest.all, studentController.refreshToken);
 api.get("/profile/:id",trimRequest.all, check.auth, studentController.profile);
 //page es un parametro opcional
-api.get("/list/:page?",trimRequest.all, check.auth, studentController.list);
+api.get("/list",trimRequest.all, check.auth, studentController.list);
 api.put("/update",trimRequest.all, check.auth, studentController.update);
 //[check.auth, uploadImage.single("upload0")]  ---> los corchetes para usar varios middlewares
 api.post("/uploadImage",trimRequest.all, [check.auth, uploadImage.single("upload0")], studentController.uploadImage);

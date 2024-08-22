@@ -13,7 +13,7 @@ const create_open_conversation = async (req, res) => {
   try {
     const sender_id = req.user.studentId;
     const { receiver_id, isGroup=false } = req.body;
-    console.log(req.body);
+    // console.log(req.body);
     // console.log(req.body);
     if (isGroup == false) {
       //check if receiver is provided
@@ -28,7 +28,7 @@ const create_open_conversation = async (req, res) => {
         receiver_id,
         false
       );
-        console.log(existed_conversation);
+        // console.log(existed_conversation);
       if (existed_conversation) {
         res.json(existed_conversation);
       } else {
@@ -39,7 +39,7 @@ const create_open_conversation = async (req, res) => {
           isGroup: false,
           students: [sender_id, receiver_id],
         };
-        console.log(convoData);
+        // console.log(convoData);
         const newConvo = await createConversation(convoData);
 
         const populatedConvo = await populateConversation(
@@ -50,7 +50,7 @@ const create_open_conversation = async (req, res) => {
         res.json(populatedConvo);
       }
     } else {
-      console.log("hnaaaaaaaaaa");
+      // console.log("hnaaaaaaaaaa");
       //it's a group chat
       //check if group chat exists
       const existed_group_conversation = await doesConversationExist(
@@ -81,7 +81,7 @@ const getConversations = async (req, res) => {
 
 const createGroup = async (req, res) => {
   const { name, students } = req.body;
-  console.log(req.body);
+  // console.log(req.body);
   //add current user to users
   students.push(req.user.studentId);
   if (!name || !students) {
